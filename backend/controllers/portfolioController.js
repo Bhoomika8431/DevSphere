@@ -1,30 +1,63 @@
-﻿const Portfolio = require("../models/Portfolio");
+﻿// backend/controllers/portfolioController.js
 
-const getUserPortfolios = async (req, res) => {
-  try {
-    const portfolios = await Portfolio.find({ user: req.user?.id || "650000000000000000000000" });
-    res.status(200).json({ success: true, count: portfolios.length, data: portfolios });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+let portfolios = []; // Or your Mongoose model logic
 
 const createPortfolio = async (req, res) => {
   try {
-    const { githubUsername, title, bio, skills, projects, theme } = req.body;
-    const newPortfolio = await Portfolio.create({
-      user: req.user?.id || "650000000000000000000000",
-      githubUsername,
-      title: title || `${githubUsername}s Portfolio`,
-      bio,
-      skills: skills || [],
-      projects: projects || [],
-      theme: theme || "dark"
-    });
-    res.status(201).json({ success: true, data: newPortfolio });
+    const { title, description, githubUrl, projectData } = req.body;
+    const newPortfolio = {
+      _id: Date.now().toString(),
+      title: title || projectData?.project?.name || 'Untitled',
+      description: description || projectData?.project?.description || '',
+      githubUrl,
+      projectData,
+      createdAt: new Date(),
+    };
+    portfolios.push(newPortfolio);
+    return res.status(201).json({ success: true, data: newPortfolio });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to create portfolio.' });
   }
 };
 
-module.exports = { getUserPortfolios, createPortfolio };
+const getPortfolioById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const portfolio = portfolios.find((p) => p._id === id);
+    if (!portfolio) {
+      return res.status(404).json({ success: false, message: 'Portfolio Not Found' });
+    }
+    return res.status(200).json({ success: true, data: portfolio });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to retrieve portfolio.' });
+  }
+};
+
+const getAllPortfolios = async (req, res) => {
+  return res.status(200).json({ success: true, data: portfolios });
+};
+
+// 👈 MAKE SURE THIS FUNCTION EXISTS
+const deletePortfolio = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const index = portfolios.findIndex((p) => p._id === id);
+
+    if (index === -1) {
+      return res.status(404).json({ success: false, message: 'Portfolio Not Found' });
+    }
+
+    portfolios.splice(index, 1);
+    return res.status(200).json({ success: true, message: 'Portfolio deleted successfully.' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to delete portfolio.' });
+  }
+};
+
+// 👈 MAKE SURE deletePortfolio IS IN THIS EXPORT OBJECT!
+module.exports = {
+  createPortfolio,
+  getPortfolioById,
+  getAllPortfolios,
+  deletePortfolio,
+};

@@ -7,7 +7,7 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import CreatePortfolio from './pages/CreatePortfolio';
 import EditPortfolio from './pages/EditPortfolio';
-import PublicPortfolio from './pages/PublicPortfolio';
+import LivePortfolio from './pages/LivePortfolio'; // 👈 1. Added LivePortfolio import
 
 export default function App() {
   return (
@@ -18,7 +18,11 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="create-portfolio" element={<CreatePortfolio />} />
           <Route path="edit/:id" element={<EditPortfolio />} />
-          <Route path="portfolio/:id" element={<PublicPortfolio />} />
+          
+          {/* 👈 2. Fixed single portfolio route pointing to LivePortfolio */}
+          <Route path="portfolio/:id" element={<LivePortfolio />} />
+          
+          {/* Catch-all route for unknown paths */}
           <Route path="*" element={<Home />} />
         </Route>
       </Routes>
