@@ -14,18 +14,9 @@ export default function PublicPortfolio() {
         if (response.ok) {
           const data = await response.json();
           setPortfolio(data);
-        } else {
-          throw new Error('Not found');
         }
       } catch (err) {
-        setPortfolio({
-          id,
-          title: 'DevSphere Portfolio Showcase',
-          bio: 'AI-driven dynamic portfolio builder for developers.',
-          techStack: ['React', 'FastAPI', 'Tailwind CSS', 'Node.js'],
-          repo: 'https://github.com/Bhoomika8431/DevSphere',
-          updatedAt: new Date().toISOString().split('T')[0],
-        });
+        console.error('Error fetching portfolio:', err);
       } finally {
         setLoading(false);
       }
@@ -35,11 +26,23 @@ export default function PublicPortfolio() {
   }, [id]);
 
   if (loading) {
-    return <div className="text-center py-20 text-slate-400">Loading portfolio preview...</div>;
+    return <div className="text-center py-20 text-slate-400">Loading full portfolio details...</div>;
+  }
+
+  if (!portfolio) {
+    return (
+      <div className="text-center py-20 text-white space-y-4">
+        <h2 className="text-2xl font-bold">Portfolio Not Found</h2>
+        <button onClick={() => navigate('/dashboard')} className="text-indigo-400 underline">
+          Back to Dashboard
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto text-white py-10 space-y-12">
+    <div className="max-w-5xl mx-auto text-white py-8 space-y-8">
+      {/* Top Bar Navigation */}
       <div className="flex justify-between items-center border-b border-slate-800 pb-4">
         <button
           type="button"
@@ -49,52 +52,79 @@ export default function PublicPortfolio() {
           ← Back to Dashboard
         </button>
         <span className="text-xs text-slate-400 uppercase tracking-widest font-semibold">
-          Live Preview Mode
+          Complete Showcase
         </span>
       </div>
 
-      <div className="space-y-6 bg-gradient-to-br from-slate-800/80 to-slate-900 border border-slate-700/60 rounded-3xl p-8 sm:p-12 shadow-2xl">
-        <div className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-          Available for Hire / Collaboration
+      {/* Main Hero Header */}
+      <div className="bg-gradient-to-br from-slate-800/90 to-slate-900 border border-slate-700/60 rounded-3xl p-8 sm:p-10 space-y-6 shadow-2xl">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
+            Repository Overview
+          </span>
+          <a
+            href={portfolio.repo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-lg shadow-indigo-600/30 cursor-pointer"
+          >
+            View Source on GitHub ↗
+          </a>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
           {portfolio.title}
         </h1>
 
-        <p className="text-slate-300 text-lg sm:text-xl leading-relaxed max-w-2xl">
+        <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
           {portfolio.bio}
         </p>
 
-        <div className="space-y-3 pt-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Technologies Used
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {portfolio.techStack && portfolio.techStack.length > 0 ? (
-              portfolio.techStack.map((tech, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1.5 bg-slate-700/60 border border-slate-600/50 rounded-lg text-sm font-medium text-slate-200"
-                >
-                  {tech}
-                </span>
-              ))
-            ) : (
-              <span className="text-slate-400 text-sm">React, Tailwind CSS, JavaScript</span>
-            )}
+        {/* Repository Metric Badges */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-700/50">
+          <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-center">
+            <div className="text-xs text-slate-400 font-medium">Stars</div>
+            <div className="text-lg font-bold text-amber-400 mt-0.5">⭐ {portfolio.stars ?? 0}</div>
+          </div>
+          <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-center">
+            <div className="text-xs text-slate-400 font-medium">Forks</div>
+            <div className="text-lg font-bold text-cyan-400 mt-0.5">🍴 {portfolio.forks ?? 0}</div>
+          </div>
+          <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-center">
+            <div className="text-xs text-slate-400 font-medium">Open Issues</div>
+            <div className="text-lg font-bold text-rose-400 mt-0.5">⚠️ {portfolio.openIssues ?? 0}</div>
+          </div>
+          <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-center">
+            <div className="text-xs text-slate-400 font-medium">License</div>
+            <div className="text-lg font-bold text-emerald-400 mt-0.5">📜 {portfolio.license || 'MIT'}</div>
           </div>
         </div>
 
-        <div className="pt-6 flex flex-wrap gap-4 border-t border-slate-700/50">
-          <a
-            href={portfolio.repo}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/30 inline-flex items-center gap-2 cursor-pointer"
-          >
-            <span>View Source on GitHub</span> ↗
-          </a>
+        {/* Full Technologies Used */}
+        <div className="space-y-3 pt-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Languages & Technologies
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {portfolio.techStack.map((tech, idx) => (
+              <span
+                key={idx}
+                className="px-3.5 py-1.5 bg-slate-800 border border-slate-700 text-indigo-300 rounded-xl text-xs font-semibold"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Full Project Documentation / README View */}
+      <div className="bg-slate-800/40 border border-slate-700/60 rounded-3xl p-8 space-y-4">
+        <h2 className="text-xl font-bold border-b border-slate-700/60 pb-3">
+          📖 Project Documentation (README)
+        </h2>
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 overflow-x-auto text-slate-300 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+          {portfolio.readmeContent}
         </div>
       </div>
     </div>

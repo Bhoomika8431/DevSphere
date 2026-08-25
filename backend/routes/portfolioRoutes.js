@@ -1,23 +1,17 @@
 ﻿const express = require('express');
 const router = express.Router();
 
-// Mock initial data store
-let portfolios = [
-  {
-    id: '1',
-    title: 'DevSphere Portfolio Showcase',
-    repo: 'https://github.com/Bhoomika8431/DevSphere',
-    bio: 'AI-driven dynamic portfolio builder for developers.',
-    techStack: ['React', 'FastAPI', 'Tailwind CSS', 'Node.js'],
-    status: 'Published',
-    updatedAt: new Date().toISOString().split('T')[0],
-  },
-];
+let portfolios = [];
 
-// Helper to sanitize GitHub repository URLs
-const cleanGitHubUrl = (url) => {
-  if (!url) return 'https://github.com/Bhoomika8431/DevSphere';
-  return url.replace(/\/blob\/.*$/, '').replace(/\/tree\/.*$/, '').trim();
+// Helper to parse GitHub URL
+const parseGitHubUrl = (url) => {
+  if (!url) return null;
+  const cleanUrl = url.replace(/\/blob\/.*$/, '').replace(/\/tree\/.*$/, '').trim();
+  const parts = cleanUrl.replace('https://github.com/', '').split('/').filter(Boolean);
+  if (parts.length >= 2) {
+    return { owner: parts[0], repo: parts[1], cleanUrl: `https://github.com/${parts[0]}/${parts[1]}` };
+  }
+  return null;
 };
 
 // 1. GET ALL PORTFOLIOS
@@ -34,20 +28,79 @@ router.get('/:id', (req, res) => {
   res.status(200).json(item);
 });
 
-// 3. CREATE NEW PORTFOLIO
-router.post('/', (req, res) => {
-  const rawUrl = req.body.repoUrl || req.body.repo;
-  const sanitizedUrl = cleanGitHubUrl(rawUrl);
-  
-  // Extract repository name from URL
-  const repoName = sanitizedUrl.split('/').filter(Boolean).pop() || 'Project';
+// 3. CREATE NEW PORTFOLIO (Fetches Metadata + Languages + README content)
+router.post('/', async (req, res) => {
+  const { repoUrl } = req.body;
+  const parsed = parseGitHubUrl(repoUrl);
+
+  let title = 'GitHub Project Portfolio';
+  let bio = 'A project generated from GitHub.';
+  let techStack = [];
+  let stars = 0;
+  let forks = 0;
+  let openIssues = 0;
+  let license = 'MIT';
+  let readmeContent = '';
+  let repoLink = repoUrl || 'https://github.com/';
+
+  if (parsed) {
+    repoLink = parsed.cleanUrl;
+    const headers = { 'User-Agent': 'DevSphere-App' };
+
+    try {
+      // Endpoint 1: Main Metadata
+      const repoRes = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`, { headers });
+      if (repoRes.ok) {
+        const data = await repoRes.json();
+        title = data.name ? `${data.name} Portfolio` : title;
+        bio = data.description || bio;
+        stars = data.stargazers_count || 0;
+        forks = data.forks_count || 0;
+        openIssues = data.open_issues_count || 0;
+        license = data.license?.spdx_id || 'Not specified';
+        if (data.topics && data.topics.length > 0) {
+          techStack.push(...data.topics);
+        }
+      }
+
+      // Endpoint 2: Languages Breakdown
+      const langRes = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/languages`, { headers });
+      if (langRes.ok) {
+        const langData = await langRes.json();
+        const languagesDetected = Object.keys(langData);
+        techStack = Array.from(new Set([...languagesDetected, ...techStack]));
+      }
+
+      // Endpoint 3: README Content
+      const readmeRes = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/readme`, { headers });
+      if (readmeRes.ok) {
+        const readmeData = await readmeRes.json();
+        // Decode Base64 content from GitHub
+        if (readmeData.content) {
+          readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf-8');
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching detailed GitHub data:', err);
+    }
+  }
+
+  // Fallback tech stack if none detected
+  if (techStack.length === 0) {
+    techStack = ['JavaScript', 'HTML/CSS'];
+  }
 
   const newPortfolio = {
     id: String(Date.now()),
-    title: req.body.title || `${repoName} Portfolio`,
-    repo: sanitizedUrl,
-    bio: req.body.bio || 'Generated portfolio project showcase.',
-    techStack: req.body.techStack || ['React', 'FastAPI', 'Tailwind CSS'],
+    title: req.body.title || title,
+    repo: repoLink,
+    bio: req.body.bio || bio,
+    techStack,
+    stars,
+    forks,
+    openIssues,
+    license,
+    readmeContent: readmeContent || '### Project Overview\nNo README file provided in repository.',
     status: 'Published',
     updatedAt: new Date().toISOString().split('T')[0],
   };
@@ -56,35 +109,10 @@ router.post('/', (req, res) => {
   res.status(201).json(newPortfolio);
 });
 
-// 4. UPDATE PORTFOLIO
-router.put('/:id', (req, res) => {
-  const index = portfolios.findIndex((p) => p.id === req.params.id);
-  if (index === -1) {
-    return res.status(404).json({ message: 'Portfolio not found' });
-  }
-
-  const updatedRepo = req.body.repoUrl || req.body.repo;
-
-  portfolios[index] = {
-    ...portfolios[index],
-    ...req.body,
-    repo: updatedRepo ? cleanGitHubUrl(updatedRepo) : portfolios[index].repo,
-    updatedAt: new Date().toISOString().split('T')[0],
-  };
-
-  res.status(200).json(portfolios[index]);
-});
-
-// 5. DELETE PORTFOLIO
+// 4. DELETE PORTFOLIO
 router.delete('/:id', (req, res) => {
-  const initialLength = portfolios.length;
   portfolios = portfolios.filter((p) => p.id !== req.params.id);
-
-  if (portfolios.length === initialLength) {
-    return res.status(404).json({ message: 'Portfolio not found' });
-  }
-
-  res.status(200).json({ message: 'Portfolio deleted successfully' });
+  res.status(200).json({ message: 'Deleted' });
 });
 
 module.exports = router;
