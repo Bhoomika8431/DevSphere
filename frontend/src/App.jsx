@@ -1,22 +1,25 @@
 ﻿import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Import layout and page components
+// Layout & Pages
 import Layout from './layouts/Layout';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import CreatePortfolio from './pages/CreatePortfolio';
 import EditPortfolio from './pages/EditPortfolio';
+import PublicPortfolio from './pages/PublicPortfolio';
 
 export default function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<Home />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="create-portfolio" element={<CreatePortfolio />} />
           <Route path="edit/:id" element={<EditPortfolio />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="portfolio/:id" element={<PublicPortfolio />} />
+          <Route path="*" element={<Home />} />
         </Route>
       </Routes>
     </Router>
