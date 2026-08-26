@@ -1,29 +1,24 @@
-const { fetchGitHubRepository } = require('../services/githubService');
+// backend/controllers/githubController.js
+const { fetchRepoData } = require('../services/githubService');
 
-const analyzeRepository = async (req, res) => {
+const analyzeRepo = async (req, res) => {
   try {
-    const { repositoryUrl } = req.body;
-
-    if (!repositoryUrl) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please enter a valid GitHub repository URL.',
-      });
+    const { url } = req.body;
+    if (!url) {
+      return res.status(400).json({ message: 'GitHub URL is required.' });
     }
 
-    const data = await fetchGitHubRepository(repositoryUrl);
-
-    return res.status(200).json({
-      success: true,
-      data,
-    });
+    const repoData = await fetchRepoData(url);
+    return res.status(200).json(repoData);
   } catch (error) {
-    const statusCode = error.status || 500;
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || 'Something went wrong while analyzing the project. Please try again.',
+    console.error('❌ GitHub Controller Error:', error.message);
+    return res.status(500).json({
+      message: error.message || 'Unable to fetch repository details from GitHub.',
     });
   }
 };
 
-module.exports = { analyzeRepository };
+// 🔴 CRITICAL: Ensure analyzeRepo is exported in an object
+module.exports = {
+  analyzeRepo,
+};

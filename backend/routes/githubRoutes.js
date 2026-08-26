@@ -1,8 +1,10 @@
+// backend/routes/githubRoutes.js
 const express = require('express');
 const router = express.Router();
-const { analyzeRepository } = require('../controllers/githubController');
+// 🔴 CRITICAL: Destructure analyzeRepo so it isn't undefined
+const { analyzeRepo } = require('../controllers/githubController');
 
-// This matches POST http://localhost:5000/api/github/analyze
-router.post('/analyze', analyzeRepository);
+// Define route
+router.post('/analyze', analyzeRepo);
 
 module.exports = router;

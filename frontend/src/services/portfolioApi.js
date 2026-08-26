@@ -1,64 +1,59 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+// src/services/portfolioApi.js
+import axios from 'axios';
 
-// Create / Save new portfolio
+const API_BASE_URL = 'http://localhost:5000/api/portfolio';
+
+/**
+ * 1. Analyze a GitHub repository URL and generate an AI summary
+ */
+export const analyzeRepository = async (repoUrl) => {
+  // 📌 Updated endpoint to match backend route (/analyze-repo)
+  const response = await axios.post(`${API_BASE_URL}/analyze-repo`, { repoUrl });
+  return response.data;
+};
+
+/**
+ * 2. Fetch all published portfolio items for the Dashboard
+ */
+export const getPortfolios = async () => {
+  const response = await axios.get(API_BASE_URL);
+  return response.data;
+};
+
+/**
+ * 3. Fetch a single portfolio item by ID
+ */
+export const getPortfolioById = async (id) => {
+  const response = await axios.get(`${API_BASE_URL}/${id}`);
+  return response.data;
+};
+
+/**
+ * Alias export to satisfy components importing 'fetchPortfolioById'
+ */
+export const fetchPortfolioById = getPortfolioById;
+
+/**
+ * 4. Save / Publish a new portfolio item
+ */
 export const savePortfolio = async (portfolioData) => {
-  const response = await fetch(`${API_BASE_URL}/portfolios`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(portfolioData),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.message || 'Failed to save portfolio.');
-  }
-
-  return data.data;
+  const response = await axios.post(API_BASE_URL, portfolioData);
+  return response.data;
 };
 
-// Fetch all portfolios
-export const fetchAllPortfolios = async () => {
-  const response = await fetch(`${API_BASE_URL}/portfolios`);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to fetch portfolios.');
-  }
-
-  if (Array.isArray(data.data)) {
-    return data.data;
-  } else if (Array.isArray(data)) {
-    return data;
-  }
-
-  return [];
+/**
+ * 5. Delete a portfolio item by ID
+ */
+export const deletePortfolio = async (id) => {
+  const response = await axios.delete(`${API_BASE_URL}/${id}`);
+  return response.data;
 };
 
-// Fetch single portfolio by ID
-export const fetchPortfolioById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/portfolios/${id}`);
-  const data = await response.json();
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.message || 'Failed to fetch portfolio.');
-  }
-
-  return data.data;
-};
-
-// Delete portfolio by ID
-export const deletePortfolioById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/portfolios/${id}`, {
-    method: 'DELETE',
-  });
-  const data = await response.json();
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.message || 'Failed to delete portfolio.');
-  }
-
-  return data;
+export default {
+  analyzeRepository,
+  getPortfolios,
+  getPortfolioById,
+  fetchPortfolioById,
+  savePortfolio,
+  deletePortfolio,
 };

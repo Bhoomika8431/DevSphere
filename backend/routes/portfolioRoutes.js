@@ -1,15 +1,12 @@
-﻿const express = require('express');
+﻿// backend/routes/portfolioRoutes.js
+const express = require('express');
 const router = express.Router();
-const {
-  createPortfolio,
-  getPortfolioById,
-  getAllPortfolios,
-  deletePortfolio, // 👈 Import delete
-} = require('../controllers/portfolioController');
+const portfolioController = require('../controllers/portfolioController');
 
-router.post('/', createPortfolio);
-router.get('/', getAllPortfolios);
-router.get('/:id', getPortfolioById);
-router.delete('/:id', deletePortfolio); // 👈 Register DELETE route
+router.get('/', portfolioController.getAllPortfolios);
+router.post('/', portfolioController.savePortfolio);
+router.get('/:id', portfolioController.getPortfolioById);
+router.post('/analyze-repo', portfolioController.generateAiSummary);
+router.delete('/:id', portfolioController.deletePortfolio);
 
 module.exports = router;

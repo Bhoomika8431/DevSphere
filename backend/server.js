@@ -1,21 +1,25 @@
-﻿const express = require('express');
+﻿// backend/server.js
+const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-// 1. Import your route files
+// Import routes
 const githubRoutes = require('./routes/githubRoutes');
-const portfolioRoutes = require('./routes/portfolioRoutes'); // 👈 ADD THIS LINE
+const portfolioRoutes = require('./routes/portfolioRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// 2. Mount API Routes
+// API Route Mounts (Ensured singular /api/portfolio)
 app.use('/api/github', githubRoutes);
-app.use('/api/portfolios', portfolioRoutes); // 👈 ADD THIS LINE
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/ai', aiRoutes);
 
-// 3. Fallback 404 handler (this generated the message in your screenshot!)
+// Fallback 404 Handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -25,5 +29,5 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`DevSphere backend server running on http://localhost:${PORT}`);
+  console.log(` DevSphere backend server running on http://localhost:${PORT}`);
 });
